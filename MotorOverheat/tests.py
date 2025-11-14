@@ -1,6 +1,7 @@
 import logging
 from paho_mqtt_helper.mqtt_helper import MQTTHelper
 import time
+import json
 
 # Enable logging to see paho_mqtt_helper messages
 logging.basicConfig(
@@ -12,10 +13,11 @@ logging.basicConfig(
 mqtt_client = MQTTHelper(
     # must match common name of certificate
     clientId="sap-ingestion",
+    mqtthost="mqtt.te0688583-6a69-467b-bde5-0cfe6568ad80.eu20.cy.iot.sap",
     #mqtthost="mqtt.tf6073089-f620-457c-8b28-8da6929054fa.dev.cy.iot.sap",
-    mqtthost="mqtt.mstoffel.eu-latest.cumulocity.com",
+    #mqtthost="mqtt.mstoffel.eu-latest.cumulocity.com",
     mqttport=8883,
-    topics="s/e,s/ds",
+    topics="s/e,devicecontrol/notifications",
     ### could be removed if tls_insecure is True
     ca_certs="/opt/homebrew/etc/ca-certificates/cert.pem",
     certfile="../sap-ingestion.cert.pem",
@@ -23,8 +25,37 @@ mqtt_client = MQTTHelper(
     tls_insecure=True
 )
 
+
+received_operation={}
+
+
+def reset_operation(operation_fragment: str, result: bool, reason: str) -> None:
+    print(f'resetting operation {operation_fragment} to {result} with reason \'{reason}\'')
+    mqtt_client.publish("s/us", f"501,{operation_fragment}", qos=1)
+    if result:
+        mqtt_client.publish("s/us", f"503,{operation_fragment}", qos=1)
+    else:
+        mqtt_client.publish("s/us", f"502,{operation_fragment},{reason}", qos=1)
+        
+
+def check_operation(operation_fragment: str) -> bool:
+    print(f'received_operation: {received_operation}')
+    if operation_fragment in received_operation:
+        print(f"Operation does contain '{operation_fragment}'")
+        return True
+    else:
+        print(f"Operation does NOT contain '{operation_fragment}'")
+        return False
+
+
+
 def on_message(client, userdata, message):
     print(f"Received message: {message.payload.decode()}")
+    try:
+        payload = json.loads(message.payload.decode())  
+        received_operation.update(payload)
+    except json.JSONDecodeError:
+        print("Received message is not valid JSON")
 
 
 def clear_alarm(alarm_type: str) -> str:
@@ -57,8 +88,19 @@ def test_m1_ma0_oh1():
     maintenance_mode(0)
     time.sleep(1)
     motor_overheated(1)
+    time.sleep(4)
+    if check_operation("MotorOverheat"):
+        print("Alarm received as expected.")
+        reset_operation("MotorOverheat", True, "Alarm received")
+    else:
+        print("Alarm NOT received, test failed.")
+        reset_operation("MotorOverheat", False, "Alarm not received")
+    
+    
     print("Press any key to continue...")
     input()
+    clear_alarm("MotorOverheat")
+
     
 # No Alarm
 def test_m0_ma1_oh1():
@@ -101,6 +143,9 @@ def test_m1_ma1_oh1_ma0():
 result = mqtt_client.connect(on_message)
 if result == 0:
     print("Connected successfully")
+    clear_alarm("MotorOverheat")
+    reset_operation("MotorOverheat", False, "Initial reset")
+    time.sleep(1)
     test_m1_ma0_oh1()
     time.sleep(2)
     clear_alarm("MotorOverheat")
