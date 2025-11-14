@@ -1,2 +1,0 @@
-paho-mqtt>=1.6.1
-paho-mqtt-helper>=0.0.2
