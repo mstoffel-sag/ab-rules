@@ -2,9 +2,13 @@ import pytest
 import yaml
 import logging
 import os
+import warnings
 from pathlib import Path
 from dotenv import load_dotenv
 from mqtt_operations import MQTTOperations
+
+# Suppress deprecation warnings from third-party libraries
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # Load environment variables
 load_dotenv()
@@ -62,6 +66,7 @@ def mqtt_ops(config):
 def reset_alarm(mqtt_ops, config):
     """Reset alarm before each test."""
     mqtt_ops.received_operation.clear()
+    mqtt_ops.clear_alarm_timestamps()
     mqtt_ops.clear_alarm("MotorOverheat")
     mqtt_ops.reset_operation("MotorOverheat", False, "Initial reset")
     

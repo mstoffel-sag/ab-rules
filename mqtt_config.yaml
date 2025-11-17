@@ -1,4 +1,5 @@
 test:
   wait_for_alarm: 4
   wait_between_commands: 1
-  wait_between_tests: 2
+  wait_between_tests: 1
+  alarm_receive_timeout: 3

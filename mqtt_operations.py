@@ -1,10 +1,14 @@
+import datetime
 import json
+import time
+
 from paho_mqtt_helper.mqtt_helper import MQTTHelper
 
 
 class MQTTOperations:
     def __init__(self, config: dict):
         self.received_operation = {}
+        self.alarm_timestamps = 0.0  # Track when alarms are received
         self.mqtt_client = MQTTHelper(
             clientId=config['client_id'],
             mqtthost=config['host'],
@@ -21,6 +25,11 @@ class MQTTOperations:
         try:
             payload = json.loads(message.payload.decode())
             self.received_operation.update(payload)
+            
+            # Record timestamp when alarm is received
+            self.alarm_timestamps = datetime.datetime.fromisoformat(payload["delivery"]["time"]).timestamp()
+            print(f"Alarm timestamp recorded: {self.alarm_timestamps}")
+            
         except json.JSONDecodeError:
             print("Received message is not valid JSON")
     
@@ -46,6 +55,16 @@ class MQTTOperations:
         else:
             print(f"Operation does NOT contain '{operation_fragment}'")
             return False
+    
+    def get_alarm_response_time(self, operation_fragment: str, trigger_time: float) -> float:
+        """Calculate the time between trigger and alarm receipt."""
+        response_time = self.alarm_timestamps - trigger_time
+        print(f"Alarm response time for '{operation_fragment}': {response_time:.3f} seconds")
+        return response_time
+    
+    def clear_alarm_timestamps(self):
+        """Clear alarm timestamp tracking."""
+        self.alarm_timestamps = 0.0
     
     def clear_alarm(self, alarm_type: str) -> str:
         print(f"Clearing alarm: {alarm_type}")
