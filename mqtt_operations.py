@@ -71,18 +71,3 @@ class MQTTOperations:
         payload = f"306,{alarm_type}"
         self.mqtt_client.publish("s/us", payload, qos=1)
         return payload
-    
-    def motor_state(self, state: int) -> str:
-        payload = f"200,motor-state,motor-state,{state},state"
-        self.mqtt_client.publish("s/us", payload, qos=1)
-        return payload
-    
-    def maintenance_mode(self, mode: int) -> str:
-        payload = f"200,maintenance-mode,maintenance-mode,{mode},state"
-        self.mqtt_client.publish("s/us", payload, qos=1)
-        return payload
-    
-    def motor_overheated(self, overheated: int) -> str:
-        payload = f"200,motor-overheated,motor-overheated,{overheated},state"
-        self.mqtt_client.publish("s/us", payload, qos=1)
-        return payload

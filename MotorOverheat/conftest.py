@@ -1,13 +1,26 @@
 import pytest
 import yaml
 from pathlib import Path
+import motor_helpers
+
 
 @pytest.fixture(scope="module")
 def test_config():
     """Load test-specific configuration."""
     config_path = Path(__file__).parent / "config.yaml"
+    
+    if not config_path.exists():
+        raise FileNotFoundError(f"Config file not found at: {config_path}")
+    
     with open(config_path, 'r') as f:
         return yaml.safe_load(f)
+
+
+@pytest.fixture(scope="module")
+def motor_ops():
+    """Provide motor-specific helper functions."""
+    return motor_helpers
+
 
 @pytest.fixture(autouse=True)
 def reset_alarm(mqtt_ops, test_config):
