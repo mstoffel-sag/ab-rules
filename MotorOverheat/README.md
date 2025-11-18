@@ -2,66 +2,69 @@
 
 ## Overview
 
-This project implements and tests an alarm system for motor overheat conditions. The system monitors motor temperature and triggers alarms based on specific conditions while respecting maintenance mode settings.
+Tests an Analytic Builder model that triggers alarms when a motor overheats while running and not in maintenance mode.
 
 ## Alarm Logic
 
-### When Alarm is Triggered
+### Alarm Triggered When
 
-The Motor Overheat alarm is triggered when **ALL** of the following conditions are met:
+All conditions must be met:
 
 - ✅ Motor is **ON** (`motor_state = 1`)
 - ✅ Maintenance mode is **OFF** (`maintenance_mode = 0`)
 - ✅ Motor is **Overheated** (`motor_overheated = 1`)
-- ✅ The overheat condition **persists** for a specific duration (configured threshold time)
+- ✅ Overheat condition **persists** for configured threshold time
 
-**Note:** The alarm will only trigger after the overheat condition has been continuously present for the required time period. Brief or transient overheat signals that don't persist will not trigger an alarm.
+### No Alarm When
 
-### When Alarm is NOT Triggered
-
-The alarm will **NOT** be triggered in any of the following scenarios:
-
-- ❌ Motor is **OFF** (regardless of other conditions)
-- ❌ Maintenance mode is **ON** (regardless of other conditions)
+- ❌ Motor is **OFF**
+- ❌ Maintenance mode is **ON**
 - ❌ Motor is **NOT overheated**
-- ❌ Overheat condition does **NOT persist** long enough (below threshold duration)
+- ❌ Overheat condition doesn't persist long enough
 
 ### Maintenance Mode Behavior
 
-- When maintenance mode is activated **after** an overheat condition is detected, the alarm is **suppressed**
-- When maintenance mode is deactivated **after** an overheat condition occurs, the alarm remains **suppressed** (overheat condition must be re-triggered)
-- Maintenance mode takes precedence over alarm conditions
-
-## Test Scenarios
-
-### Positive Tests (Alarm Expected)
-
-1. **Motor ON + Maintenance OFF + Overheat ON**
-   - Expected: Alarm triggered within configured time window after persistence threshold is met
-2. **Multiple Overheat Signals**
-   - Motor ON + Maintenance OFF + Overheat ON (repeated 3 times)
-   - Expected: Alarm triggered after repeated signals meet persistence threshold
-
-### Negative Tests (No Alarm Expected)
-
-1. **Motor OFF**
-
-   - Motor OFF + Maintenance ON + Overheat ON
-   - Expected: No alarm (motor not running)
-
-2. **Maintenance Mode Active Before Overheat**
-
-   - Motor ON + Maintenance ON + Overheat ON + Maintenance OFF
-   - Expected: No alarm (maintenance mode was active when condition occurred)
-
-3. **Maintenance Mode Activated After Overheat**
-   - Motor ON + Maintenance OFF + Overheat ON + Maintenance ON
-   - Expected: No alarm (maintenance mode suppresses existing condition)
+- Activated **after** overheat detected → alarm **suppressed**
+- Deactivated **after** overheat occurred → alarm remains **suppressed**
+- Must re-trigger overheat condition after maintenance ends
 
 ## Configuration
 
-The system uses timing configurations defined in `../config.yaml`:
+Edit `config.yaml` for timing parameters:
 
-- `alarm_receive_timeout`: Minimum time to wait before checking for alarm (persistence threshold)
-- `wait_for_alarm`: Maximum time to wait for alarm response
-- `wait_between_commands`: Delay between MQTT commands
+```yaml
+test:
+  wait_for_alarm: 4 # Max time to wait for alarm
+  wait_between_commands: 1 # Delay between MQTT commands
+  wait_between_tests: 1 # Delay between test scenarios
+  alarm_receive_timeout: 3 # Min time before checking alarm
+  alarm_type: "MotorOverheat"
+  operation_fragment: "MotorOverheat"
+```
+
+## Test Scenarios
+
+### Positive (Alarm Expected)
+
+1. **Motor ON + Maintenance OFF + Overheat ON** → Alarm after persistence threshold
+2. **Multiple Overheat Signals** → Alarm after repeated signals
+
+### Negative (No Alarm Expected)
+
+1. **Motor OFF** → No alarm (motor not running)
+2. **Maintenance Active Before Overheat** → No alarm (maintenance suppresses)
+3. **Maintenance Activated After Overheat** → No alarm (maintenance suppresses existing condition)
+
+## Setup
+
+1. **Import Model**: Load `MotorOverheat.json` into Analytic Builder
+2. **Activate Model**: Deploy and activate in Cumulocity
+3. **Configure**: Adjust `config.yaml` timings if needed
+4. **Run Tests**: `pytest MotorOverheat/`
+
+## Files
+
+- `MotorOverheat.json`: Analytic Builder model definition
+- `config.yaml`: Test-specific configuration
+- `conftest.py`: Test fixtures and setup/teardown
+- `test_motor_overheat.py`: Test scenarios
