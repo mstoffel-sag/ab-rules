@@ -56,10 +56,10 @@ class MQTTOperations:
             print(f"Operation does NOT contain '{operation_fragment}'")
             return False
     
-    def get_alarm_response_time(self, operation_fragment: str, trigger_time: float) -> float:
+    def get_alarm_response_time(self,  trigger_time: float) -> float:
         """Calculate the time between trigger and alarm receipt."""
         response_time = self.alarm_timestamps - trigger_time
-        print(f"Alarm response time for '{operation_fragment}': {response_time:.3f} seconds")
+        print(f"Alarm response time: {response_time:.3f} seconds")
         return response_time
     
     def clear_alarm_timestamps(self):
