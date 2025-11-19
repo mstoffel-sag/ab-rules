@@ -74,12 +74,11 @@ ab-rules/
 ├── requirements.txt
 ├── conftest.py                # Global pytest fixtures
 ├── mqtt_operations.py         # MQTT helper functions
-└── MotorOverheat/            # Test case directory
-    ├── MotorOverheat.json    # Analytic Builder model
-    ├── README.md             # Test case documentation
-    ├── config.yaml           # Test-specific configuration
-    ├── conftest.py          # Test-specific fixtures
-    └── test_motor_overheat.py
+└── MotorOverheat/             # Test case directory
+    ├── MotorOverheat.json     # Analytic Builder model
+    ├── README.md              # Test case documentation
+    ├── config.yaml            # Test-specific configuration
+    └── test_motor_overheat.py # Test implementation
 ```
 
 ## Running Tests
@@ -113,9 +112,8 @@ pytest -x
 1. **Create Test Directory**: `mkdir NewTestCase/`
 2. **Add Model JSON**: Export from Analytic Builder and place in directory
 3. **Create config.yaml**: Define test-specific timings and parameters
-4. **Create conftest.py**: Add test-specific fixtures if needed
-5. **Create test file**: Write test scenarios using `mqtt_ops` fixture
-6. **Add README.md**: Document the test case logic and scenarios
+4. **Create test file**: Write test scenarios using `mqtt_ops` fixture (e.g., `test_new_case.py`)
+5. **Add README.md**: Document the test case logic and scenarios
 
 Example `config.yaml`:
 
