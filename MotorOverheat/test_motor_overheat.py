@@ -5,19 +5,35 @@ import time
 class TestMotorOverheat:
     """Tests for Motor Overheat alarm scenarios."""
     
+
     @pytest.fixture(autouse=True)
-    def setup(self, test_config, motor_ops):
+    def setup(self, test_config):
         """Automatically setup config and helpers for all tests.
         
         Args:
             test_config: Test-specific configuration fixture
-            motor_ops: Motor-specific helper functions
+            helpers: Generic send helper functions
         """
         self.config = test_config
         self.alarm_type = test_config['test']['alarm_type']
         self.operation_fragment = test_config['test']['operation_fragment']
-        self.motor = motor_ops
     
+    def send_motor_overheat(self, mqtt_ops, state: int):
+        """Send motor overheat alarm."""
+        print("\n🔥 Sending motor overheat alarm")
+        mqtt_ops.mqtt_client.publish("s/us", f"200,{self.config['test']['motor_overheat_fragment']},{self.config['test']['motor_overheat_series']},{state}")
+  
+    def send_maintenance_mode(self, mqtt_ops, mode: int):
+        """Send maintenance mode measurement."""
+        print(f"\n🔧 Sending maintenance mode {mode}")
+        mqtt_ops.mqtt_client.publish("s/us", f"200,{self.config['test']['maintenance_mode_fragment']},{self.config['test']['maintenance_mode_series']},{mode}")
+
+    def send_motor_state(self, mqtt_ops, state: int):
+        """Send motor state measurement."""
+        print(f"\n⚙️ Sending motor state {state}")   
+        mqtt_ops.mqtt_client.publish("s/us", f"200,{self.config['test']['motor_state_fragment']},{self.config['test']['motor_state_series']},{state}")
+        
+
     def sleep_between_commands(self):
         """Sleep for the configured time between commands."""
         time.sleep(self.config['test']['wait_between_commands'])
@@ -62,17 +78,17 @@ class TestMotorOverheat:
         print("="*80)
         
         # Set up conditions
-        self.motor.motor_state(mqtt_ops, 1)
+        self.send_motor_state(mqtt_ops, 1)
         self.sleep_between_commands()
         
-        self.motor.maintenance_mode(mqtt_ops, 0)
+        self.send_maintenance_mode(mqtt_ops, 0)
         self.sleep_between_commands()
         
         # Record time when overheat condition is triggered
         trigger_time = time.time()
         print(f"\n🔥 Triggering overheat condition at {trigger_time}")
         
-        self.motor.motor_overheated(mqtt_ops, 1)
+        self.send_motor_overheat(mqtt_ops, 1)
         self.sleep_for_alarm()
         
         # Check if alarm was received
@@ -85,14 +101,14 @@ class TestMotorOverheat:
         print("="*80)
         
         # Set up conditions
-        self.motor.motor_state(mqtt_ops, 0)
+        self.send_motor_state(mqtt_ops, 0)
         self.sleep_between_commands()
         
-        self.motor.maintenance_mode(mqtt_ops, 0)
+        self.send_maintenance_mode(mqtt_ops, 0)
         self.sleep_between_commands()
         
         trigger_time = time.time()
-        self.motor.motor_overheated(mqtt_ops, 1)
+        self.send_motor_overheat(mqtt_ops, 1)
         self.sleep_for_alarm()
         
         # Verify no alarm
@@ -105,14 +121,14 @@ class TestMotorOverheat:
         print("="*80)
         
         # Set up conditions
-        self.motor.motor_state(mqtt_ops, 1)
+        self.send_motor_state(mqtt_ops, 1)
         self.sleep_between_commands()
         
-        self.motor.maintenance_mode(mqtt_ops, 1)
+        self.send_maintenance_mode(mqtt_ops, 1)
         self.sleep_between_commands()
         
         trigger_time = time.time()
-        self.motor.motor_overheated(mqtt_ops, 1)
+        self.send_motor_overheat(mqtt_ops, 1)
         self.sleep_for_alarm()
         
         # Verify no alarm
@@ -125,18 +141,18 @@ class TestMotorOverheat:
         print("="*80)
         
         # Set up initial conditions
-        self.motor.motor_state(mqtt_ops, 1)
+        self.send_motor_state(mqtt_ops, 1)
         self.sleep_between_commands()
         
-        self.motor.maintenance_mode(mqtt_ops, 0)
+        self.send_maintenance_mode(mqtt_ops, 0)
         self.sleep_between_commands()
         
         trigger_time = time.time()
-        self.motor.motor_overheated(mqtt_ops, 1)
+        self.send_motor_overheat(mqtt_ops, 1)
         self.sleep_between_commands()
         
         # Activate maintenance mode before alarm threshold
-        self.motor.maintenance_mode(mqtt_ops, 1)
+        self.send_maintenance_mode(mqtt_ops, 1)
         self.sleep_for_alarm()
         
         # Verify no alarm
@@ -149,17 +165,17 @@ class TestMotorOverheat:
         print("="*80)
         
         # Set up conditions
-        self.motor.motor_state(mqtt_ops, 1)
+        self.send_motor_state(mqtt_ops, 1)
         self.sleep_between_commands()
         
-        self.motor.maintenance_mode(mqtt_ops, 0)
+        self.send_maintenance_mode(mqtt_ops, 0)
         self.sleep_between_commands()
         
         # Send multiple overheat signals
         trigger_time = time.time()
         for i in range(3):
             print(f"\n🔥 Sending overheat signal #{i+1}")
-            self.motor.motor_overheated(mqtt_ops, 1)
+            self.send_motor_overheat(mqtt_ops, 1)
             time.sleep(0.5)
         
         self.sleep_for_alarm()

@@ -5,3 +5,9 @@ test:
   alarm_receive_timeout: 3
   alarm_type: "MotorOverheat"
   operation_fragment: "MotorOverheat"
+  motor_overheat_series: "motor-overheated"
+  motor_overheat_fragment: "motor-overheated"
+  maintenance_mode_fragment: "maintenance-mode"
+  maintenance_mode_series: "maintenance-mode"
+  motor_state_fragment: "motor-state"
+  motor_state_series: "motor-state"

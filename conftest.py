@@ -5,6 +5,7 @@ import warnings
 from pathlib import Path
 from dotenv import load_dotenv
 from mqtt_operations import MQTTOperations
+import yaml
 
 # Suppress deprecation warnings from third-party libraries
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -57,21 +58,17 @@ def mqtt_ops(mqtt_config):
 
 
 @pytest.fixture(scope="module")
-def test_config():
-    """Load test-specific configuration."""
-    config_path = Path(__file__).parent / "config.yaml"
+def test_config(request):
+    """Load test-specific configuration from the test's directory."""
+    # Get the directory of the test file that's using this fixture
+    test_dir = Path(request.fspath).parent
+    config_path = test_dir / "config.yaml"
     
     if not config_path.exists():
         raise FileNotFoundError(f"Config file not found at: {config_path}")
     
     with open(config_path, 'r') as f:
         return yaml.safe_load(f)
-
-
-@pytest.fixture(scope="module")
-def motor_ops():
-    """Provide motor-specific helper functions."""
-    return motor_helpers
 
 
 @pytest.fixture(autouse=True)
