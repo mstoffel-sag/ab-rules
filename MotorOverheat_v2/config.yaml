@@ -1,0 +1,13 @@
+test:
+  wait_for_alarm: 5
+  wait_between_commands: 1
+  wait_between_tests: 1
+  alarm_receive_timeout: 4
+  alarm_type: "c8y_E4_ID_202"
+  operation_fragment: "c8y_E4_ID_202"
+  motor_overheat_series: "motor-overheated"
+  motor_overheat_fragment: "motor-overheated"
+  maintenance_mode_fragment: "c8y_MONTAGEMODEACTIVE"
+  maintenance_mode_series: "c8y_MONTAGEMODEACTIVE"
+  motor_state_fragment: "c8y_SYSTEM_STATUS"
+  motor_state_series: "c8y_SYSTEM_STATUS"
